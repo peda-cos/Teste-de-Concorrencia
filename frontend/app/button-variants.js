@@ -12,7 +12,7 @@ export const buttonVariants = css`
     min-height: 44px;
     padding: var(--space-12, 12px) var(--space-16, 16px);
     text-transform: uppercase;
-    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    transition: background-color var(--transition, 0.15s ease), border-color var(--transition, 0.15s ease), color var(--transition, 0.15s ease);
   }
 
   .btn-primary {
@@ -22,8 +22,8 @@ export const buttonVariants = css`
   }
 
   .btn-primary:hover:not(:disabled) {
-    color: #ffffff;
-    border-color: #ffffff;
+    color: var(--bright, #ffffff);
+    border-color: var(--bright, #ffffff);
   }
 
   .btn-primary:active:not(:disabled) {
@@ -39,7 +39,7 @@ export const buttonVariants = css`
   }
 
   .btn-secondary:hover:not(:disabled) {
-    color: #ffffff;
+    color: var(--bright, #ffffff);
     border-color: var(--fg, #eaeaea);
   }
 
@@ -56,8 +56,8 @@ export const buttonVariants = css`
   }
 
   .btn-danger:hover:not(:disabled) {
-    color: #ffffff;
-    border-color: #ffffff;
+    color: var(--bright, #ffffff);
+    border-color: var(--bright, #ffffff);
   }
 
   .btn-danger:active:not(:disabled) {
@@ -73,8 +73,8 @@ export const buttonVariants = css`
   }
 
   .btn-success:hover:not(:disabled) {
-    color: #ffffff;
-    border-color: #ffffff;
+    color: var(--bright, #ffffff);
+    border-color: var(--bright, #ffffff);
   }
 
   .btn-success:active:not(:disabled) {
@@ -90,7 +90,7 @@ export const buttonVariants = css`
   }
 
   .btn-ghost:hover:not(:disabled) {
-    color: #ffffff;
+    color: var(--bright, #ffffff);
     border-color: var(--hairline, #2a2a2a);
   }
 
@@ -122,5 +122,11 @@ export const buttonVariants = css`
   .btn-ghost:focus-visible {
     outline: 2px solid var(--accent, #ff2a2a);
     outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    button {
+      transition-duration: 0ms;
+    }
   }
 `;

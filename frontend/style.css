@@ -5,6 +5,7 @@
   --accent: #ff2a2a;
   --terminal: #4af626;
   --hairline: #2a2a2a;
+  --bright: #ffffff;
 
   --font-body: 'JetBrains Mono', monospace;
   --font-display: 'Inter', sans-serif;
@@ -121,7 +122,7 @@ button:disabled {
   cursor: not-allowed;
 }
 
-/* button variants */
+/* button variants — global (light DOM) copy; shadow DOM components use button-variants.js */
 button {
   transition: background-color var(--transition), border-color var(--transition), color var(--transition);
 }
@@ -133,8 +134,8 @@ button {
 }
 
 .btn-primary:hover:not(:disabled) {
-  color: #ffffff;
-  border-color: #ffffff;
+  color: var(--bright);
+  border-color: var(--bright);
 }
 
 .btn-primary:active:not(:disabled) {
@@ -150,7 +151,7 @@ button {
 }
 
 .btn-secondary:hover:not(:disabled) {
-  color: #ffffff;
+  color: var(--bright);
   border-color: var(--fg);
 }
 
@@ -167,8 +168,8 @@ button {
 }
 
 .btn-danger:hover:not(:disabled) {
-  color: #ffffff;
-  border-color: #ffffff;
+  color: var(--bright);
+  border-color: var(--bright);
 }
 
 .btn-danger:active:not(:disabled) {
@@ -184,8 +185,8 @@ button {
 }
 
 .btn-success:hover:not(:disabled) {
-  color: #ffffff;
-  border-color: #ffffff;
+  color: var(--bright);
+  border-color: var(--bright);
 }
 
 .btn-success:active:not(:disabled) {
@@ -201,7 +202,7 @@ button {
 }
 
 .btn-ghost:hover:not(:disabled) {
-  color: #ffffff;
+  color: var(--bright);
   border-color: var(--hairline);
 }
 
