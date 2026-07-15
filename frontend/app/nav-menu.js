@@ -28,6 +28,11 @@ class NavMenu extends LitElement {
       color: #ffffff;
     }
 
+    a[aria-current] {
+      color: #ffffff;
+      border-bottom: 2px solid var(--accent, #ff2a2a);
+    }
+
     a:focus-visible {
       outline: 2px solid var(--accent, #ff2a2a);
       outline-offset: 2px;
@@ -35,10 +40,11 @@ class NavMenu extends LitElement {
   `;
 
   render() {
+    const current = window.location.pathname;
     return html`
       <nav aria-label="Principal">
-        <a href="/">Teste de Carga</a>
-        <a href="/saldo.html">Saldo em Tempo Real</a>
+        <a href="/" ?aria-current="${current === '/' || current === '/index.html'}">Teste de Carga</a>
+        <a href="/saldo.html" ?aria-current="${current === '/saldo.html'}">Saldo em Tempo Real</a>
       </nav>
     `;
   }

@@ -1,4 +1,5 @@
 import { LitElement, html, css } from 'https://esm.sh/lit';
+import { buttonVariants } from './button-variants.js';
 
 class LoadTestConfig extends LitElement {
   static properties = {
@@ -14,7 +15,7 @@ class LoadTestConfig extends LitElement {
     this.metrics = null;
   }
 
-  static styles = css`
+  static styles = [css`
     :host {
       display: block;
     }
@@ -63,7 +64,7 @@ class LoadTestConfig extends LitElement {
       border: 1px dashed var(--hairline, #2a2a2a);
       padding: var(--space-24, 24px);
     }
-  `;
+  `, buttonVariants];
 
   addGroup() {
     this.groups = [...this.groups, { users: 1, requests: 10, type: 'credit' }];
@@ -84,6 +85,17 @@ class LoadTestConfig extends LitElement {
   async startTest() {
     if (this.groups.length === 0) {
       return;
+    }
+    for (let i = 0; i < this.groups.length; i++) {
+      const g = this.groups[i];
+      if (!g.users || g.users < 1) {
+        this.metrics = { error: `Grupo ${i + 1}: número de usuários deve ser maior que zero` };
+        return;
+      }
+      if (!g.requests || g.requests < 1) {
+        this.metrics = { error: `Grupo ${i + 1}: número de requisições deve ser maior que zero` };
+        return;
+      }
     }
     this.loading = true;
     this.metrics = null;
@@ -116,6 +128,7 @@ class LoadTestConfig extends LitElement {
                   id="users-${index}"
                   type="number"
                   min="1"
+                  step="1"
                   .value="${String(group.users)}"
                   @input="${(e) => this.updateGroup(index, 'users', Number(e.target.value))}"
                 />
@@ -126,6 +139,7 @@ class LoadTestConfig extends LitElement {
                   id="requests-${index}"
                   type="number"
                   min="1"
+                  step="1"
                   .value="${String(group.requests)}"
                   @input="${(e) => this.updateGroup(index, 'requests', Number(e.target.value))}"
                 />
@@ -141,13 +155,13 @@ class LoadTestConfig extends LitElement {
                   <option value="debit">Débito</option>
                 </select>
               </div>
-              <button type="button" @click="${() => this.removeGroup(index)}" ?disabled="${this.loading}">Remover</button>
+              <button type="button" class="btn-danger" @click="${() => this.removeGroup(index)}" ?disabled="${this.loading}">Remover</button>
             </div>
           `)}
 
       <div class="actions">
-        <button type="button" @click="${this.addGroup}" ?disabled="${this.loading}">Adicionar Grupo</button>
-        <button type="button" @click="${this.startTest}" ?disabled="${this.loading || this.groups.length === 0}">${this.loading ? 'Executando…' : 'Iniciar Teste'}</button>
+        <button type="button" class="btn-secondary" @click="${this.addGroup}" ?disabled="${this.loading}">Adicionar Grupo</button>
+        <button type="button" class="btn-primary" @click="${this.startTest}" ?disabled="${this.loading || this.groups.length === 0}">${this.loading ? 'Executando…' : 'Iniciar Teste'}</button>
       </div>
 
       ${this.metrics && !this.metrics.error

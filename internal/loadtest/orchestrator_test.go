@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"sync/atomic"
 	"testing"
 )
 
@@ -26,9 +27,9 @@ func TestOrchestrator_invalid_group_rejected(t *testing.T) {
 }
 
 func TestOrchestrator_client_replacement(t *testing.T) {
-	var calls int
+	var calls atomic.Int64
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		calls++
+		calls.Add(1)
 		w.Header().Set("content-type", "application/json")
 		if r.URL.Path == "/balance" {
 			_ = json.NewEncoder(w).Encode(map[string]int{"balance": 0})
@@ -43,8 +44,8 @@ func TestOrchestrator_client_replacement(t *testing.T) {
 	if err != nil {
 		t.Fatalf("run: %v", err)
 	}
-	if calls != 11 {
-		t.Fatalf("server calls = %d, want 11", calls)
+	if n := int(calls.Load()); n != 11 {
+		t.Fatalf("server calls = %d, want 11", n)
 	}
 	if report.TotalRequests != 10 {
 		t.Fatalf("totalRequests = %d, want 10", report.TotalRequests)

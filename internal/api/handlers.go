@@ -28,7 +28,7 @@ func (h *Handler) SetOrchestrator(o *loadtest.Orchestrator) {
 // Credit handles POST /credit.
 func (h *Handler) Credit(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		writeMethodNotAllowed(w)
+		writeMethodNotAllowed(w, http.MethodPost)
 		return
 	}
 	balance, err := h.svc.Credit()
@@ -38,7 +38,7 @@ func (h *Handler) Credit(w http.ResponseWriter, r *http.Request) {
 // Debit handles POST /debit.
 func (h *Handler) Debit(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		writeMethodNotAllowed(w)
+		writeMethodNotAllowed(w, http.MethodPost)
 		return
 	}
 	balance, err := h.svc.Debit()
@@ -48,7 +48,7 @@ func (h *Handler) Debit(w http.ResponseWriter, r *http.Request) {
 // Balance handles GET /balance.
 func (h *Handler) Balance(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		writeMethodNotAllowed(w)
+		writeMethodNotAllowed(w, http.MethodGet)
 		return
 	}
 	balance, err := h.svc.Balance()
@@ -65,15 +65,15 @@ func writeBalance(w http.ResponseWriter, balance int, err error) {
 	_ = json.NewEncoder(w).Encode(map[string]int{"balance": balance})
 }
 
-func writeMethodNotAllowed(w http.ResponseWriter) {
-	w.Header().Set("allow", "POST")
+func writeMethodNotAllowed(w http.ResponseWriter, method string) {
+	w.Header().Set("allow", method)
 	http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 }
 
 // LoadTestStart handles POST /load-test/start.
 func (h *Handler) LoadTestStart(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		writeMethodNotAllowed(w)
+		writeMethodNotAllowed(w, http.MethodPost)
 		return
 	}
 	if h.orchestrator == nil {
@@ -90,7 +90,7 @@ func (h *Handler) LoadTestStart(w http.ResponseWriter, r *http.Request) {
 	report, err := h.orchestrator.Run(groups)
 	if err != nil {
 		log.Printf("load test error: %v", err)
-		http.Error(w, fmtError(err), http.StatusBadRequest)
+		http.Error(w, jsonError(err), http.StatusBadRequest)
 		return
 	}
 
@@ -98,7 +98,8 @@ func (h *Handler) LoadTestStart(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(report)
 }
 
-func fmtError(err error) string {
+// jsonError marshals err into a JSON error response body.
+func jsonError(err error) string {
 	b, _ := json.Marshal(map[string]string{"error": err.Error()})
 	return string(b)
 }

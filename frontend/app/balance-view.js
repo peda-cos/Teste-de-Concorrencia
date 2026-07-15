@@ -1,4 +1,5 @@
 import { LitElement, html, css } from 'https://esm.sh/lit';
+import { buttonVariants } from './button-variants.js';
 
 class BalanceView extends LitElement {
   static properties = {
@@ -11,9 +12,10 @@ class BalanceView extends LitElement {
     this.balance = 0;
     this.pending = false;
     this.socket = null;
+    this.reconnectTimer = null;
   }
 
-  static styles = css`
+  static styles = [css`
     :host {
       display: block;
     }
@@ -46,7 +48,7 @@ class BalanceView extends LitElement {
       display: flex;
       gap: var(--space-16, 16px);
     }
-  `;
+  `, buttonVariants];
 
   connectedCallback() {
     super.connectedCallback();
@@ -56,6 +58,10 @@ class BalanceView extends LitElement {
 
   disconnectedCallback() {
     super.disconnectedCallback();
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
+    }
     if (this.socket) {
       this.socket.close();
       this.socket = null;
@@ -84,6 +90,11 @@ class BalanceView extends LitElement {
 
     this.socket.addEventListener('close', () => {
       this.socket = null;
+      this.reconnectTimer = setTimeout(() => {
+        if (this.isConnected) {
+          this.connect();
+        }
+      }, 2000);
     });
   }
 
@@ -130,8 +141,8 @@ class BalanceView extends LitElement {
         <span class="balance" aria-live="polite">${this.balance}</span>
       </div>
       <div class="actions">
-        <button type="button" ?disabled="${this.pending}" @click="${() => this.postOperation('/credit')}">Creditar +1</button>
-        <button type="button" ?disabled="${this.pending}" @click="${() => this.postOperation('/debit')}">Debitar -1</button>
+        <button type="button" class="btn-success" ?disabled="${this.pending}" @click="${() => this.postOperation('/credit')}">Creditar +1</button>
+        <button type="button" class="btn-danger" ?disabled="${this.pending}" @click="${() => this.postOperation('/debit')}">Debitar -1</button>
       </div>
     `;
   }

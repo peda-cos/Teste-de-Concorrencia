@@ -36,6 +36,8 @@ func (s *Service) Debit() (int, error) {
 }
 
 // Balance returns the current persisted account balance.
+// Does not acquire the mutex: SQLite WAL mode provides consistent reads
+// via MVCC, so a concurrent write does not corrupt the read result.
 func (s *Service) Balance() (int, error) {
 	var balance int
 	if err := s.db.QueryRow(`SELECT balance FROM accounts WHERE id = 1`).Scan(&balance); err != nil {
