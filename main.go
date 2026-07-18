@@ -60,9 +60,6 @@ func run() error {
 	mux.Handle("/", http.FileServer(http.FS(frontendFS)))
 
 	addr := ":" + port
-	log.Printf("server listening on http://localhost%s", addr)
-	log.Printf("tela 1 (load test)   → http://localhost:%s/", port)
-	log.Printf("tela 2 (saldo real)  → http://localhost:%s/saldo.html", port)
 	return http.ListenAndServe(addr, mux)
 }
 
