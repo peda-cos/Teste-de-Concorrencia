@@ -58,7 +58,10 @@ func (h *Hub) Broadcast(balance int) {
 
 	var dead []*websocket.Conn
 	h.conns.Range(func(key, value any) bool {
-		conn := key.(*websocket.Conn)
+		conn, ok := key.(*websocket.Conn)
+		if !ok {
+			return true
+		}
 		if err := conn.SetWriteDeadline(time.Now().Add(2 * time.Second)); err != nil {
 			dead = append(dead, conn)
 			return true

@@ -45,6 +45,9 @@ func (o *Orchestrator) Run(groups []Group) (*Report, error) {
 	if len(groups) == 0 {
 		return nil, fmt.Errorf("at least one group is required")
 	}
+	if o.client == nil {
+		return nil, fmt.Errorf("orchestrator: client is nil")
+	}
 
 	var total int64
 	var successes atomic.Int64
@@ -106,8 +109,14 @@ func validateGroup(g Group) error {
 	if g.Users <= 0 {
 		return fmt.Errorf("users must be greater than zero")
 	}
+	if g.Users > 10_000 {
+		return fmt.Errorf("users must not exceed 10000")
+	}
 	if g.Requests <= 0 {
 		return fmt.Errorf("requests must be greater than zero")
+	}
+	if g.Requests > 1_000_000 {
+		return fmt.Errorf("requests must not exceed 1000000")
 	}
 	if g.Type != "credit" && g.Type != "debit" {
 		return fmt.Errorf("type must be credit or debit")
