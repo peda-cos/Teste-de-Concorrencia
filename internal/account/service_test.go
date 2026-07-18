@@ -101,7 +101,7 @@ func TestService_concurrent_mixed_operations_are_atomic(t *testing.T) {
 	var wg sync.WaitGroup
 	wg.Add(credits + debits)
 
-	for i := 0; i < credits; i++ {
+	for range credits {
 		go func() {
 			defer wg.Done()
 			if _, err := svc.Credit(); err != nil {
@@ -109,7 +109,7 @@ func TestService_concurrent_mixed_operations_are_atomic(t *testing.T) {
 			}
 		}()
 	}
-	for i := 0; i < debits; i++ {
+	for range debits {
 		go func() {
 			defer wg.Done()
 			if _, err := svc.Debit(); err != nil {
