@@ -62,13 +62,14 @@ func (o *Orchestrator) Run(groups []Group) (*Report, error) {
 			path = "/debit"
 		}
 
-		for u := 0; u < g.Users; u++ {
+		for range g.Users {
 			wg.Add(1)
 			total += int64(g.Requests)
-			go func(path string, requests int) {
+			url := o.baseURL + path
+			go func(url string, requests int) {
 				defer wg.Done()
-				for i := 0; i < requests; i++ {
-					resp, err := o.client.Post(o.baseURL+path, "application/json", nil)
+				for range requests {
+					resp, err := o.client.Post(url, "application/json", nil)
 					if err != nil {
 						failures.Add(1)
 						continue
@@ -80,7 +81,7 @@ func (o *Orchestrator) Run(groups []Group) (*Report, error) {
 						failures.Add(1)
 					}
 				}
-			}(path, g.Requests)
+			}(url, g.Requests)
 		}
 	}
 

@@ -48,10 +48,10 @@ func (h *Hub) Unregister(conn *websocket.Conn) {
 // Safe for concurrent use.
 func (h *Hub) Broadcast(balance int) {
 	h.mu.Lock()
-	defer h.mu.Unlock()
 
 	payload, err := json.Marshal(map[string]int{"balance": balance})
 	if err != nil {
+		h.mu.Unlock()
 		log.Printf("ws marshal error: %v", err)
 		return
 	}
@@ -70,8 +70,15 @@ func (h *Hub) Broadcast(balance int) {
 		return true
 	})
 
+	// Unregister while holding the mutex so the map stays consistent.
 	for _, conn := range dead {
-		h.unregisterAndClose(conn)
+		h.Unregister(conn)
+	}
+	h.mu.Unlock()
+
+	// Close outside the mutex — conn.Close may block on TCP teardown.
+	for _, conn := range dead {
+		_ = conn.Close()
 	}
 }
 

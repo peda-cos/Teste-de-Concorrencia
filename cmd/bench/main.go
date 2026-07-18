@@ -26,7 +26,6 @@ const (
 	creditReqs    = 500
 	debitUsers    = 20
 	debitReqs     = 500
-	readDeadline  = 5 * time.Second
 	wsDialTimeout = 5 * time.Second
 )
 
