@@ -48,27 +48,34 @@ func (s *Service) Balance() (int, error) {
 
 func (s *Service) apply(delta int) (int, error) {
 	s.mu.Lock()
-	defer s.mu.Unlock()
 
 	tx, err := s.db.Begin()
 	if err != nil {
+		s.mu.Unlock()
 		return 0, fmt.Errorf("begin transaction: %w", err)
 	}
 	defer tx.Rollback()
 
 	var balance int
 	if err := tx.QueryRow(`SELECT balance FROM accounts WHERE id = 1`).Scan(&balance); err != nil {
+		s.mu.Unlock()
 		return 0, fmt.Errorf("select balance: %w", err)
 	}
 
 	balance += delta
 	if _, err := tx.Exec(`UPDATE accounts SET balance = ? WHERE id = 1`, balance); err != nil {
+		s.mu.Unlock()
 		return 0, fmt.Errorf("update balance: %w", err)
 	}
 
 	if err := tx.Commit(); err != nil {
+		s.mu.Unlock()
 		return 0, fmt.Errorf("commit transaction: %w", err)
 	}
+
+	// Release the mutex before broadcasting — Broadcast can block on
+	// slow WebSocket clients and must not serialize subsequent operations.
+	s.mu.Unlock()
 
 	if s.broadcaster != nil {
 		s.broadcaster.Broadcast(balance)

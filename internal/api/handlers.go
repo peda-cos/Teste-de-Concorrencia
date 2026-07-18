@@ -58,7 +58,7 @@ func (h *Handler) Balance(w http.ResponseWriter, r *http.Request) {
 func writeBalance(w http.ResponseWriter, balance int, err error) {
 	if err != nil {
 		log.Printf("account handler error: %v", err)
-		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		writeJSONError(w, http.StatusInternalServerError, "internal error")
 		return
 	}
 	w.Header().Set("content-type", "application/json")
@@ -77,20 +77,20 @@ func (h *Handler) LoadTestStart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if h.orchestrator == nil {
-		http.Error(w, `{"error":"load test unavailable"}`, http.StatusServiceUnavailable)
+		writeJSONError(w, http.StatusServiceUnavailable, "load test unavailable")
 		return
 	}
 
 	var groups []loadtest.Group
 	if err := json.NewDecoder(r.Body).Decode(&groups); err != nil {
-		http.Error(w, `{"error":"invalid json"}`, http.StatusBadRequest)
+		writeJSONError(w, http.StatusBadRequest, "invalid json")
 		return
 	}
 
 	report, err := h.orchestrator.Run(groups)
 	if err != nil {
 		log.Printf("load test error: %v", err)
-		http.Error(w, jsonError(err), http.StatusBadRequest)
+		writeJSONError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -98,8 +98,8 @@ func (h *Handler) LoadTestStart(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(report)
 }
 
-// jsonError marshals err into a JSON error response body.
-func jsonError(err error) string {
-	b, _ := json.Marshal(map[string]string{"error": err.Error()})
-	return string(b)
+func writeJSONError(w http.ResponseWriter, status int, msg string) {
+	w.Header().Set("content-type", "application/json")
+	w.WriteHeader(status)
+	_ = json.NewEncoder(w).Encode(map[string]string{"error": msg})
 }

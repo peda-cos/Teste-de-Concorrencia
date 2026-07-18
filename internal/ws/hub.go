@@ -13,6 +13,7 @@ import (
 
 // Hub broadcasts balance updates to all connected WebSocket clients.
 type Hub struct {
+	mu       sync.Mutex // serialises Broadcast so concurrent calls don't race on WS writes.
 	conns    sync.Map
 	upgrader websocket.Upgrader
 }
@@ -44,25 +45,34 @@ func (h *Hub) Unregister(conn *websocket.Conn) {
 
 // Broadcast sends the new balance as JSON to every connected client.
 // Connections that fail to receive the message are closed and removed.
+// Safe for concurrent use.
 func (h *Hub) Broadcast(balance int) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
 	payload, err := json.Marshal(map[string]int{"balance": balance})
 	if err != nil {
 		log.Printf("ws marshal error: %v", err)
 		return
 	}
 
+	var dead []*websocket.Conn
 	h.conns.Range(func(key, value any) bool {
 		conn := key.(*websocket.Conn)
 		if err := conn.SetWriteDeadline(time.Now().Add(2 * time.Second)); err != nil {
-			h.unregisterAndClose(conn)
+			dead = append(dead, conn)
 			return true
 		}
 		if err := conn.WriteMessage(websocket.TextMessage, payload); err != nil {
 			log.Printf("ws write error: %v", err)
-			h.unregisterAndClose(conn)
+			dead = append(dead, conn)
 		}
 		return true
 	})
+
+	for _, conn := range dead {
+		h.unregisterAndClose(conn)
+	}
 }
 
 // ServeHTTP upgrades HTTP requests to WebSocket connections and keeps them

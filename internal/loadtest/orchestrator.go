@@ -121,17 +121,23 @@ func (o *Orchestrator) fetchBalance() (int, error) {
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode != http.StatusOK {
+		return 0, fmt.Errorf("fetch balance: http %d", resp.StatusCode)
+	}
+
 	var body struct {
 		Balance int `json:"balance"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
-		return 0, err
+		return 0, fmt.Errorf("fetch balance: decode: %w", err)
 	}
 	return body.Balance, nil
 }
 
-// WithClient replaces the default HTTP client (useful in tests).
+// WithClient replaces the default HTTP client. Passing nil is a no-op.
 func (o *Orchestrator) WithClient(client *http.Client) *Orchestrator {
-	o.client = client
+	if client != nil {
+		o.client = client
+	}
 	return o
 }
