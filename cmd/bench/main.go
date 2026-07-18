@@ -58,11 +58,9 @@ func main() {
 	srv := httptest.NewServer(mux)
 	defer srv.Close()
 
-	transport := http.DefaultTransport.(*http.Transport).Clone()
-	transport.MaxIdleConnsPerHost = 100
 	h.SetOrchestrator(loadtest.New(srv.URL).WithClient(&http.Client{
-		Timeout:   10 * time.Second,
-		Transport: transport,
+		Timeout: 10 * time.Second,
+		Transport: &muxTransport{mux},
 	}))
 
 	// Connect WebSocket clients to exercise the broadcast path.
@@ -132,4 +130,17 @@ func main() {
 	fmt.Printf("METRIC failures=%d\n", report.Failures)
 	fmt.Printf("METRIC duration_ms=%d\n", report.DurationMs)
 	fmt.Printf("METRIC final_balance=%d\n", report.FinalBalance)
+}
+
+// muxTransport is an http.RoundTripper that bypasses TCP and serves requests
+// directly to an http.Handler in-process.  This isolates pure handler / service /
+// database performance from loopback TCP overhead.
+type muxTransport struct {
+	handler http.Handler
+}
+
+func (t *muxTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	w := httptest.NewRecorder()
+	t.handler.ServeHTTP(w, req)
+	return w.Result(), nil
 }
