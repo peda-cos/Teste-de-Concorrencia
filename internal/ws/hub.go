@@ -63,8 +63,9 @@ func (h *Hub) Broadcast(balance int) {
 	}
 
 	var dead []*websocket.Conn
+	deadline := time.Now().Add(2 * time.Second)
 	for conn := range h.conns {
-		if err := conn.SetWriteDeadline(time.Now().Add(2 * time.Second)); err != nil {
+		if err := conn.SetWriteDeadline(deadline); err != nil {
 			dead = append(dead, conn)
 			continue
 		}
