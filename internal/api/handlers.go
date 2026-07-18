@@ -62,7 +62,9 @@ func writeBalance(w http.ResponseWriter, balance int, err error) {
 		return
 	}
 	w.Header().Set("content-type", "application/json")
-	_ = json.NewEncoder(w).Encode(map[string]int{"balance": balance})
+	_ = json.NewEncoder(w).Encode(struct {
+		Balance int `json:"balance"`
+	}{Balance: balance})
 }
 
 func writeMethodNotAllowed(w http.ResponseWriter, method string) {
@@ -101,5 +103,7 @@ func (h *Handler) LoadTestStart(w http.ResponseWriter, r *http.Request) {
 func writeJSONError(w http.ResponseWriter, status int, msg string) {
 	w.Header().Set("content-type", "application/json")
 	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(map[string]string{"error": msg})
+	_ = json.NewEncoder(w).Encode(struct {
+		Error string `json:"error"`
+	}{Error: msg})
 }

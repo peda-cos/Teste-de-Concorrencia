@@ -53,7 +53,9 @@ func (h *Hub) Unregister(conn *websocket.Conn) {
 func (h *Hub) Broadcast(balance int) {
 	h.mu.Lock()
 
-	payload, err := json.Marshal(map[string]int{"balance": balance})
+	payload, err := json.Marshal(struct {
+		Balance int `json:"balance"`
+	}{Balance: balance})
 	if err != nil {
 		h.mu.Unlock()
 		log.Printf("ws marshal error: %v", err)
