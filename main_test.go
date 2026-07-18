@@ -107,10 +107,13 @@ func TestLoadTest_two_group_report(t *testing.T) {
 
 	h.SetOrchestrator(loadtest.New(srv.URL))
 
-	body, _ := json.Marshal([]loadtest.Group{
+	body, err := json.Marshal([]loadtest.Group{
 		{Users: 3, Requests: 20, Type: "credit"},
 		{Users: 2, Requests: 50, Type: "debit"},
 	})
+	if err != nil {
+		t.Fatalf("marshal groups: %v", err)
+	}
 	resp, err := http.Post(srv.URL+"/load-test/start", "application/json", bytes.NewReader(body))
 	if err != nil {
 		t.Fatalf("start load test: %v", err)
