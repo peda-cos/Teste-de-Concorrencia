@@ -13,14 +13,15 @@ import (
 
 // Hub broadcasts balance updates to all connected WebSocket clients.
 type Hub struct {
-	mu       sync.Mutex // serialises Broadcast so concurrent calls don't race on WS writes.
-	conns    sync.Map
+	mu       sync.Mutex // protects conns and serialises Broadcast calls.
+	conns    map[*websocket.Conn]struct{}
 	upgrader websocket.Upgrader
 }
 
 // NewHub returns a Hub ready to accept WebSocket connections.
 func NewHub() *Hub {
 	return &Hub{
+		conns: make(map[*websocket.Conn]struct{}),
 		upgrader: websocket.Upgrader{
 			CheckOrigin: func(r *http.Request) bool {
 				origin := r.Header.Get("Origin")
@@ -33,14 +34,17 @@ func NewHub() *Hub {
 	}
 }
 
-// Register adds a connection to the broadcast list.
 func (h *Hub) Register(conn *websocket.Conn) {
-	h.conns.Store(conn, true)
+	h.mu.Lock()
+	h.conns[conn] = struct{}{}
+	h.mu.Unlock()
 }
 
 // Unregister removes a connection from the broadcast list.
 func (h *Hub) Unregister(conn *websocket.Conn) {
-	h.conns.Delete(conn)
+	h.mu.Lock()
+	delete(h.conns, conn)
+	h.mu.Unlock()
 }
 
 // Broadcast sends the new balance as JSON to every connected client.
@@ -57,29 +61,22 @@ func (h *Hub) Broadcast(balance int) {
 	}
 
 	var dead []*websocket.Conn
-	h.conns.Range(func(key, value any) bool {
-		conn, ok := key.(*websocket.Conn)
-		if !ok {
-			return true
-		}
+	for conn := range h.conns {
 		if err := conn.SetWriteDeadline(time.Now().Add(2 * time.Second)); err != nil {
 			dead = append(dead, conn)
-			return true
+			continue
 		}
 		if err := conn.WriteMessage(websocket.TextMessage, payload); err != nil {
 			log.Printf("ws write error: %v", err)
 			dead = append(dead, conn)
 		}
-		return true
-	})
+	}
 
-	// Unregister while holding the mutex so the map stays consistent.
 	for _, conn := range dead {
-		h.Unregister(conn)
+		delete(h.conns, conn)
 	}
 	h.mu.Unlock()
 
-	// Close outside the mutex — conn.Close may block on TCP teardown.
 	for _, conn := range dead {
 		_ = conn.Close()
 	}
