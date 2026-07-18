@@ -29,7 +29,7 @@ func TestService_Credit_increases_balance(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run("", func(t *testing.T) {
-			for i := 0; i < tt.calls; i++ {
+			for range tt.calls {
 				if _, err := svc.Credit(); err != nil {
 					t.Fatalf("credit: %v", err)
 				}
@@ -69,7 +69,7 @@ func TestService_Debit_decreases_balance(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run("", func(t *testing.T) {
-			for i := 0; i < tt.calls; i++ {
+			for range tt.calls {
 				if _, err := svc.Debit(); err != nil {
 					t.Fatalf("debit: %v", err)
 				}
