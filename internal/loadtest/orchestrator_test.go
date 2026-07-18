@@ -32,7 +32,9 @@ func TestOrchestrator_client_replacement(t *testing.T) {
 		calls.Add(1)
 		w.Header().Set("content-type", "application/json")
 		if r.URL.Path == "/balance" {
-			_ = json.NewEncoder(w).Encode(map[string]int{"balance": 0})
+			_ = json.NewEncoder(w).Encode(struct {
+				Balance int `json:"balance"`
+			}{Balance: 0})
 			return
 		}
 		w.WriteHeader(http.StatusOK)

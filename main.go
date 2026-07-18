@@ -43,7 +43,9 @@ func run() error {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("content-type", "application/json")
-		_ = json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+		_ = json.NewEncoder(w).Encode(struct {
+			Status string `json:"status"`
+		}{Status: "ok"})
 	})
 	mux.HandleFunc("/credit", h.Credit)
 	mux.HandleFunc("/debit", h.Debit)
