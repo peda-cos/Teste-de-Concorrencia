@@ -58,7 +58,12 @@ func main() {
 	srv := httptest.NewServer(mux)
 	defer srv.Close()
 
-	h.SetOrchestrator(loadtest.New(srv.URL))
+	transport := http.DefaultTransport.(*http.Transport).Clone()
+	transport.MaxIdleConnsPerHost = 100
+	h.SetOrchestrator(loadtest.New(srv.URL).WithClient(&http.Client{
+		Timeout:   10 * time.Second,
+		Transport: transport,
+	}))
 
 	// Connect WebSocket clients to exercise the broadcast path.
 	wsURL := "ws" + strings.TrimPrefix(srv.URL, "http") + "/ws"
