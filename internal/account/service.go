@@ -56,16 +56,15 @@ func (s *Service) apply(delta int) (int, error) {
 	}
 	defer tx.Rollback()
 
+	if _, err := tx.Exec(`UPDATE accounts SET balance = balance + ? WHERE id = 1`, delta); err != nil {
+		s.mu.Unlock()
+		return 0, fmt.Errorf("update balance: %w", err)
+	}
+
 	var balance int
 	if err := tx.QueryRow(`SELECT balance FROM accounts WHERE id = 1`).Scan(&balance); err != nil {
 		s.mu.Unlock()
 		return 0, fmt.Errorf("select balance: %w", err)
-	}
-
-	balance += delta
-	if _, err := tx.Exec(`UPDATE accounts SET balance = ? WHERE id = 1`, balance); err != nil {
-		s.mu.Unlock()
-		return 0, fmt.Errorf("update balance: %w", err)
 	}
 
 	if err := tx.Commit(); err != nil {
